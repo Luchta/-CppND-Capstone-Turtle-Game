@@ -4,6 +4,7 @@
 
 Game::Game(std::size_t grid_width, std::size_t grid_height)
     : snake(grid_width, grid_height),
+      turtle(grid_width, grid_height),
       engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
       random_h(0, static_cast<int>(grid_height - 1)) {
@@ -25,7 +26,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     // Input, Update, Render - the main game loop.
     controller.HandleInput(running, snake);
     Update();
-    renderer.Render(snake, food);
+    renderer.Render(snake, food, turtle);
 
     frame_end = SDL_GetTicks();
 
@@ -69,17 +70,26 @@ void Game::Update() {
   if (!snake.alive) return;
 
   snake.Update();
+  turtle.Update();
+
+  //TODO FIXME avoid getting stuck in looking at food 
+  //static int cnt = 0;
+  //if (cnt >= 3){
+      turtle.CheckForFood(food.x, food.y);
+  //    cnt = 0;
+  //}
+  //cnt++;
 
   int new_x = static_cast<int>(snake.head_x);
   int new_y = static_cast<int>(snake.head_y);
 
   // Check if there's food over here
-  if (food.x == new_x && food.y == new_y) {
+  if (turtle.TurtleCell(food.x, food.y)) {
     score++;
     PlaceFood();
     // Grow snake and increase speed.
-    snake.GrowBody();
-    snake.speed += 0.02;
+    //snake.GrowBody();
+    //snake.speed += 0.02;
   }
 }
 

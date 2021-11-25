@@ -1,6 +1,8 @@
 #include "renderer.h"
 #include <iostream>
 #include <string>
+#include <SDL_image.h>
+
 
 Renderer::Renderer(const std::size_t screen_width,
                    const std::size_t screen_height,
@@ -31,6 +33,17 @@ Renderer::Renderer(const std::size_t screen_width,
     std::cerr << "Renderer could not be created.\n";
     std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
   }
+
+  // Load Texture
+  #define TN_FLAG_IMAGE_PATH "assets/turtle.png"
+
+  flag = IMG_LoadTexture(sdl_renderer, TN_FLAG_IMAGE_PATH);
+  if(!flag)
+  {
+      printf("Unable to load image '%s'!\n"
+              "SDL_image Error: %s", TN_FLAG_IMAGE_PATH, IMG_GetError());
+      //return false;
+  }
 }
 
 Renderer::~Renderer() {
@@ -38,7 +51,7 @@ Renderer::~Renderer() {
   SDL_Quit();
 }
 
-void Renderer::Render(Snake const snake, SDL_Point const &food) {
+void Renderer::Render(Snake const snake, SDL_Point const &food, Turtle const turtle) {
   SDL_Rect block;
   block.w = screen_width / grid_width;
   block.h = screen_height / grid_height;
@@ -53,23 +66,39 @@ void Renderer::Render(Snake const snake, SDL_Point const &food) {
   block.y = food.y * block.h;
   SDL_RenderFillRect(sdl_renderer, &block);
 
+
+  // Turtle dimensions/position
+  SDL_Rect flagRect;
+  // Scale the turtle dimensions to fit the screen
+  flagRect.w = block.w * turtle.size;
+  flagRect.h = flagRect.w;
+  // turtle position: In the middle of the screen
+  flagRect.x = (static_cast<int>(turtle.head_x) * block.w);// -(2 * block.w);
+  flagRect.y = (static_cast<int>(turtle.head_y) * block.h);
+ // -(2 * block.h);
+  // Render Turtle
+  SDL_RenderCopyEx(sdl_renderer, flag, NULL, &flagRect, turtle.rotation, NULL, SDL_FLIP_NONE);
+
+
   // Render snake's body
+  
   SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   for (SDL_Point const &point : snake.body) {
     block.x = point.x * block.w;
     block.y = point.y * block.h;
     SDL_RenderFillRect(sdl_renderer, &block);
   }
-
-  // Render snake's head
+  
+ 
+  /* Render snake's head
   block.x = static_cast<int>(snake.head_x) * block.w;
   block.y = static_cast<int>(snake.head_y) * block.h;
   if (snake.alive) {
     SDL_SetRenderDrawColor(sdl_renderer, 0x00, 0x7A, 0xCC, 0xFF);
   } else {
     SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0x00, 0x00, 0xFF);
-  }
-  SDL_RenderFillRect(sdl_renderer, &block);
+  }*/
+  //SDL_RenderFillRect(sdl_renderer, &block);
 
   // Update Screen
   SDL_RenderPresent(sdl_renderer);
