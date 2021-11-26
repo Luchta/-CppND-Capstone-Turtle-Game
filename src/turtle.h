@@ -7,6 +7,7 @@
 
 
 #include "SDL.h"
+#include "helpers.h"
 
 class Turtle {
  public:
@@ -26,7 +27,8 @@ class Turtle {
     Walk,
     Turn,
     Sleep,
-    Feed
+    Feed,
+    Shake
   };
   enum class Wall
   {
@@ -53,13 +55,6 @@ class Turtle {
       int dist;
   };
 
-  class Coordinate {
-    public:
-      Coordinate(int x_, int y_) : x(x_), y(y_) {}
-      int x;
-      int y;
-  };
-
   Turtle(int grid_width, int grid_height)
       : grid_width(grid_width),
         grid_height(grid_height),
@@ -71,6 +66,7 @@ class Turtle {
   bool TurtleCell(int x, int y);
   void CheckForFood(int x, int y);
 
+  void Poke();
 
   //Direction2 direction = Direction2::k0;
 
@@ -83,7 +79,7 @@ class Turtle {
   std::vector<SDL_Point> body;
 
   int update_steps = 0;
-  int speed_steps = 2;
+  int speed_steps = 3;
 
 private:
   void RandomMove();
@@ -95,9 +91,11 @@ private:
   void DetectWall();
   void NewDirection(Wall wall);
   void NewWalk();
+  void NewShake();
+
   TargetVector GetTargetVector(int x_start, int y_start, int x_end, int y_end);
   void ConvertToTurtleVector(TargetVector *target);
-  Coordinate GetTargetCoordinate(int x, int y, int dir, int dist);
+  helper::Coordinate GetTargetCoordinate(int x, int y, int dir, int dist);
 
   Direction2 direction = Direction2::k0;
   State state = State::Sleep;
@@ -109,6 +107,7 @@ private:
   int steps_to_go = 5;
   int steps = 0;
 
+  int shakes = 0;
   bool turn_left = false;
   int sleeepcycle = 20;
   int counter = 0;
