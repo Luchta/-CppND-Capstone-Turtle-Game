@@ -6,11 +6,17 @@ This is a submission repo for the Capstone project in the [Udacity C++ Nanodegre
 
 In this project, I extended the Snake game, to create a pet simulation similarly to the tamagochi. The Game is a turtle simulation with the goal of feeding the turtle to keep it in a good mood. Food can be placed by clicking into the game area, but watch out! clicking the turtle will reduce the remaining mood. Longest time alive will be added to a list and saved.
 
+## Structure
+
+
 ## Addressed rubrics
 * Loops, Functions, I/O
-  * TODO
+  * function organization visible in turtle.h/.cpp
+  * file usage in renderer.cpp - 40
+  * Click input controller.cpp - 18ff
 * Object Oriented Programming
-  * TODO
+  * class structure see turtle.h/.cpp
+  * member init lists turtle.cpp - 13-17
 * Memory Management
   * TODO
 * Concurrency
