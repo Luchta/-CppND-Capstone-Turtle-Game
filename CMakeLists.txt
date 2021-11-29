@@ -20,7 +20,7 @@ endif()
 
 include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS} src)
 
-add_executable(SnakeGame 
+add_executable(TurtleGame 
     src/main.cpp 
     src/game.cpp 
     src/controller.cpp 
@@ -29,8 +29,15 @@ add_executable(SnakeGame
     src/turtle.cpp
 )
 string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
-target_link_libraries(SnakeGame ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
+target_link_libraries(TurtleGame ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
 
+add_custom_target(copy_assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/assets
+)
+
+add_dependencies(TurtleGame copy_assets)
+
+# Tests
 add_executable(TurtleTest 
     src/turtle_test.cpp
     src/turtle.cpp
