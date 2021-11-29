@@ -3,8 +3,7 @@
 #include "SDL.h"
 
 Game::Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid_width, std::size_t grid_height)
-    : snake(grid_width, grid_height),
-      turtle(grid_width, grid_height),
+    : turtle(grid_width, grid_height),
       engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
       random_h(0, static_cast<int>(grid_height - 1)),
@@ -34,7 +33,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     controller.HandleInput(running, curr_click);
     HandleClick();
     Update();
-    renderer.Render(snake, food, turtle);
+    renderer.Render(food, turtle);
 
     frame_end = SDL_GetTicks();
 
@@ -105,32 +104,19 @@ void Game::PlaceFood(int x, int y) {
 }
 
 void Game::Update() {
-  if (!snake.alive) return;
+  if (!turtle.alive) return;
 
-  snake.Update();
   turtle.Update();
 
-  //TODO FIXME avoid getting stuck in looking at food 
-  //static int cnt = 0;
   if (food.active){
     turtle.CheckForFood(food.point.x, food.point.y);
-  //    cnt = 0;
   }
-  //cnt++;
-
-  int new_x = static_cast<int>(snake.head_x);
-  int new_y = static_cast<int>(snake.head_y);
 
   // Check if there's food over here
   if (turtle.TurtleCell(food.point.x, food.point.y) && food.active) {
     score++;
     food.active = false;
-    //PlaceFood();
-    // Grow snake and increase speed.
-    //snake.GrowBody();
-    //snake.speed += 0.02;
   }
 }
 
 int Game::GetScore() const { return score; }
-int Game::GetSize() const { return snake.size; }
