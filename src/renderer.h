@@ -5,7 +5,7 @@
 #include "SDL.h"
 #include "snake.h"
 #include "turtle.h"
-#include "helpers.h"
+#include "utils.h"
 
 class Renderer {
  public:
@@ -13,7 +13,7 @@ class Renderer {
            const std::size_t grid_width, const std::size_t grid_height);
   ~Renderer();
 
-  void Render(Snake const snake, helper::Food const &food, Turtle const turtle);
+  void Render(Snake const snake, utilities::Food const &food, Turtle const turtle);
   void UpdateWindowTitle(int score, int fps);
 
  private:

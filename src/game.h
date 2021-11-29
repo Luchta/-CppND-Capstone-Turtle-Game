@@ -19,14 +19,14 @@ class Game {
 private:
   Snake snake;
   Turtle turtle;
-  helper::Food food;
+  utilities::Food food;
 
   std::random_device dev;
   std::mt19937 engine;
   std::uniform_int_distribution<int> random_w;
   std::uniform_int_distribution<int> random_h;
 
-  helper::Click_Message curr_click;
+  utilities::Click_Message curr_click;
 
   const int g_width;
   const int g_height;

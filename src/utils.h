@@ -1,9 +1,9 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #include "SDL.h"
  
-namespace helper {
+namespace utilities {
 
     class Coordinate {
     public:
@@ -26,6 +26,6 @@ namespace helper {
         bool active = false;
     };
 
-} // namespace helper
+} // namespace utilities
 
-#endif /* HELPERS_H */
+#endif /* UTILS_H */

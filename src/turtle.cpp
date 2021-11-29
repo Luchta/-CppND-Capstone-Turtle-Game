@@ -139,7 +139,7 @@ void Turtle::CheckForFood(int x, int y){
       std::cout << "IN: Walk " << target.dist << " steps \n";
 
       // get new position
-      helper::Coordinate targetXY = GetTargetCoordinate( head_x, head_y, target.dir, target.dist);
+      utilities::Coordinate targetXY = GetTargetCoordinate( head_x, head_y, target.dir, target.dist);
 
       // iterate untill close to food
       int distance = target.dist;
@@ -463,7 +463,7 @@ void Turtle::ConvertToTurtleVector(TargetVector *target){
     }
 }
 
-helper::Coordinate Turtle::GetTargetCoordinate(int x, int y, int dir, int dist){
+utilities::Coordinate Turtle::GetTargetCoordinate(int x, int y, int dir, int dist){
     int x2 = 0;
     int y2 = 0;
     // x is horitonal top
@@ -513,7 +513,7 @@ helper::Coordinate Turtle::GetTargetCoordinate(int x, int y, int dir, int dist){
       std::cout << "INVALID FUNCTION CALL! -GetTargetXY- \n";
     }
 
-    return helper::Coordinate(x2,y2);
+    return utilities::Coordinate(x2,y2);
   }
 
 // EOF

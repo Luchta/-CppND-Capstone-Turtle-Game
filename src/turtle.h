@@ -6,7 +6,7 @@
 #include <queue>
 
 #include "SDL.h"
-#include "helpers.h"
+#include "utils.h"
 
 class Turtle {
  public:
@@ -78,7 +78,7 @@ private:
   void DetectWall();
   TargetVector GetTargetVector(int x_start, int y_start, int x_end, int y_end);
   void ConvertToTurtleVector(TargetVector *target);
-  helper::Coordinate GetTargetCoordinate(int x, int y, int dir, int dist);
+  utilities::Coordinate GetTargetCoordinate(int x, int y, int dir, int dist);
 
   // Constants
   const int grid_width;
