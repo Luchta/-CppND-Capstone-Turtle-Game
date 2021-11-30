@@ -3,19 +3,16 @@
 #include "SDL.h"
 
 Game::Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid_width, std::size_t grid_height, Difficulty difficulty)
-    : engine(dev()),
-      random_w(0, static_cast<int>(grid_width - 1)),
-      random_h(0, static_cast<int>(grid_height - 1)),
-      curr_click(),
+    : curr_click(),
       food(),
       g_width(grid_width),
       g_height(grid_height),
       s_width(screen_width),
       s_height(screen_height) {
   
-  pTurtle = std::unique_ptr<Turtle>(new Turtle(grid_width, grid_height)); 
-
-  PlaceRandomFood();
+  pTurtle = std::unique_ptr<Turtle>(new Turtle(grid_width, grid_height));
+  food.active = false;
+  curr_click.active = false;
 
   switch (difficulty)
   {
@@ -31,6 +28,55 @@ Game::Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid
   }
 
 }
+
+/* Rule of 5 ******************************************************************/
+
+
+Game::Game(const Game &other)
+    : g_width(other.g_width),
+      g_height(other.g_height),
+      s_width(other.s_width),
+      s_height(other.s_height) {
+    std::cout << "Game Copy Constructor" << std::endl;
+    pTurtle = std::unique_ptr<Turtle>(new Turtle(g_width, g_height));
+}
+
+Game::Game(Game &&other)
+    : g_width(other.g_width),
+      g_height(other.g_height),
+      s_width(other.s_width),
+      s_height(other.s_height) {
+    std::cout << "Game Move Constructor" << std::endl;
+
+    // move turtle from heap memory
+    this->pTurtle = std::move(other.pTurtle);
+    other.pTurtle = nullptr;
+}
+
+Game& Game::operator=(const Game& other) 
+{
+    std::cout << "Game Copy Assignment Operator" << std::endl;
+    if(this == &other) {
+        return *this;
+    }
+
+    return *this = Game(other);
+}
+
+ Game& Game::operator=(Game &&other)
+{
+    std::cout << "Game Move Assignment Operator" << std::endl;
+    if(this == &other) {
+        return *this;
+    }
+
+    // move turtle from heap memory
+    this->pTurtle = std::move(other.pTurtle);
+    other.pTurtle = nullptr;
+    return *this;
+}
+
+/* Interactions ***************************************************************/
 
 void Game::Run(Controller const &controller, Renderer &renderer,
                std::size_t target_frame_duration) {
@@ -71,26 +117,11 @@ void Game::Run(Controller const &controller, Renderer &renderer,
       title_timestamp = frame_end;
     }
 
-
-
     // If the time for this frame is too small (i.e. frame_duration is
     // smaller than the target ms_per_frame), delay the loop to
     // achieve the correct frame rate.
     if (frame_duration < target_frame_duration) {
       SDL_Delay(target_frame_duration - frame_duration);
-    }
-  }
-}
-
-void Game::PlaceRandomFood() {
-  int x, y;
-  while (true) {
-    x = random_w(engine);
-    y = random_h(engine);
-    // Check that the location is not occupied by an item before placing
-    if (!pTurtle->TurtleCell(x, y)) {
-      PlaceFood(x, y);
-      return;
     }
   }
 }

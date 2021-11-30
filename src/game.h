@@ -22,15 +22,16 @@ class Game {
            std::size_t target_frame_duration);
   int GetScore() const;
 
+   // Rule of 5
+  Game(const Game &other);
+  Game(Game &&other);
+  Game &operator=(const Game &other);
+  Game &operator=(Game &&other);
+
 private:
   std::unique_ptr<Turtle> pTurtle;
   std::vector<utilities::Food> foods;
   utilities::Food food;
-
-  std::random_device dev;
-  std::mt19937 engine;
-  std::uniform_int_distribution<int> random_w;
-  std::uniform_int_distribution<int> random_h;
 
   utilities::Click_Message curr_click;
 
@@ -42,7 +43,6 @@ private:
   int hunger{0};
   int max_hunger{60};
   void PlaceFood(int x, int y);
-  void PlaceRandomFood();
   void Update();
   void HandleClick();
 

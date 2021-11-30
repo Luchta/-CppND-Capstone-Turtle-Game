@@ -6,7 +6,7 @@ void Controller::HandleClick(utilities::Click_Message &coordinate, int x, int y)
   coordinate.coord.x = x;
   coordinate.coord.y = y;
   coordinate.active = true;
-  std::cout << "Coordinates: " << x << " , " << y << "\n";
+  //std::cout << "Coordinates: " << x << " , " << y << "\n";
   //return;
 }
 

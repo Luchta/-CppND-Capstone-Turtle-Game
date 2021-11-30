@@ -8,6 +8,15 @@
 /*******************************************************************************
  * Public Functions
  ******************************************************************************/
+   
+Turtle::Turtle(int grid_width, int grid_height)
+      : grid_width(grid_width),
+        grid_height(grid_height),
+        head_x(grid_width / 2),
+        head_y(grid_height / 2),
+        curr_instruction(Action::Walk, 10) {
+  motion_path.push_back(curr_instruction);
+}
 
 void Turtle::Update() {
   static int update_counter = 0;
@@ -15,94 +24,46 @@ void Turtle::Update() {
   if (update_counter >= stepping_speed)
   {
     update_counter = 0;
-
-    /* Steps to perform:
-    perform motion (state rotate or move straight)
-    if rotate check if goal reached
-    if straight check for timeout and for not allowed area
-    if timeout start random generator for new motion and new timeout
-    */
-    switch (state)
+    // get latest instruction
+    curr_instruction = motion_path.front();
+    switch (curr_instruction.action_)
     {
-    case State::Shake:
-      UpdateRotation();
-      if(rotation == target_rotation_){
-        NewShake();
-      }
-      if(shakes_to_go >= 8){
-        shakes_to_go = 0;
-        stepping_speed = 2;
-        NewWalk();
-      }
-      break;
+      case Action::Sleep:
+        Sleep();
+        break;
 
-    case State::Sleep:
-      Sleep();
-      break;
+      case Action::Turn:
+        Turn();
+        break;
 
-    case State::Turn:
-      UpdateRotation();
-      if(rotation == target_rotation_){
-        NewWalk();
-      }
-      break;
+      case Action::Walk:
+        Walk();
+        break;
+      
+      default:
+        std::cout << "Invalid Instruction! \n";
+    }
 
-    case State::Walk:
-      UpdateHead();
-        // check if walked enough
-      if(steps >= steps_to_go){
-        NewDirection(Wall::None);
-        steps = 0;
-      }
-      else
-      {
-        DetectWall();
-      }
-      break;
-
-    case State::Feed:
-      auto instruction = motion_path.front();
-      /*Walking*/
-      if(instruction.action_ == State::Walk){
-        steps_to_go = instruction.steps_;
-        UpdateHead();
-        if(steps >= steps_to_go){
-          instruction.completed = true;
-          steps = 0;
-          std::cout << steps_to_go << " Steps completed! \n";
-        }else{
-          DetectWall();
+    if(curr_instruction.completed == true){
+      // remove completed instruction from path
+      motion_path.pop_front();
+      // if complete walk new way.
+      if (motion_path.empty()){
+        if (curr_instruction.action_ == Action::Turn){
+          NewWalk();
         }
-      }else if (instruction.action_ == State::Turn){
-        target_rotation_ = instruction.steps_;
-        /* Turn */
-        UpdateRotation();
-        if(rotation == target_rotation_){
-          instruction.completed = true;
-          std::cout << " Turn to " << target_rotation_ << " completed! \n";
-        }
-      }else{
-        std::cout << "Invalid Instructio! \n";
-      }
-      if(instruction.completed == true){
-        // remove completed instruction from path
-        motion_path.pop_front();
-        // if complete walk new way.
-        if (motion_path.empty()){
+        else
+        {
           NewDirection(Wall::None);
         }
       }
-      break;
-    
     }
-
-    //GoSleep();    
   }
 }
 
 // TODO FOOD
 void Turtle::CheckForFood(int x, int y){
-  if (state == State::Turn || state == State::Walk){
+  if (state == State::Moving){
 
     TargetVector target =  GetTargetVector(head_x, head_y, x, y);
 
@@ -125,18 +86,14 @@ void Turtle::CheckForFood(int x, int y){
     }
     // if food in view create instrutctions to walk to it
     if (in_range) {
-
-      steps_to_go = target.dist;
-      std::cout << "I see Food at " << target.dir << " deg in " << target.dist << " steps \n";
+      std::cout << "Found Food! \n";
 
       // Motion Planner:
       // convert to steps and directions for turtle
       ConvertToTurtleVector(&target);
 
-      motion_path.push_back( Instruction(State::Turn, target.dir) );
-      std::cout << "IN: Turn " << target.dir << " steps \n";
-      motion_path.push_back( Instruction(State::Walk, target.dist) );
-      std::cout << "IN: Walk " << target.dist << " steps \n";
+      motion_path.push_back( Instruction(Action::Turn, target.dir) );
+      motion_path.push_back( Instruction(Action::Walk, target.dist) );
 
       // get new position
       utilities::Coordinate targetXY = GetTargetCoordinate( head_x, head_y, target.dir, target.dist);
@@ -148,31 +105,22 @@ void Turtle::CheckForFood(int x, int y){
         // set next walking path
         TargetVector new_target =  GetTargetVector(targetXY.x, targetXY.y, x, y);
         ConvertToTurtleVector(&new_target);
-        motion_path.push_back( Instruction(State::Turn, new_target.dir) );
-        std::cout << "IN: Turn " << new_target.dir << " steps \n";
-        motion_path.push_back( Instruction(State::Walk, new_target.dist) );
-        std::cout << "IN: Turn " << new_target.dist << " steps \n";
+        motion_path.push_back( Instruction(Action::Turn, new_target.dir) );
+        motion_path.push_back( Instruction(Action::Walk, new_target.dist) );
         // get new position
         targetXY = GetTargetCoordinate( targetXY.x, targetXY.y, new_target.dir, new_target.dist);
         distance = new_target.dist;
       }
 
       // set state
-      state = State::Feed;
+      state = State::Feeding;
       steps = 0;
-      steps_to_go = 0;
     }
   }
 }
 
-void Turtle::EatFood(){
-  
-}
-
 void Turtle::Poke(){
-  //increase anoyance level
-  state = State::Shake;
-  shakes_to_go = 0;
+  state = State::Shaking;
   stepping_speed--;
   if (stepping_speed <= 0){
     stepping_speed = 1;
@@ -180,11 +128,7 @@ void Turtle::Poke(){
   NewShake();
 }
 
-// Inefficient method to check if cell is occupied by snake.
 bool Turtle::TurtleCell(int x, int y) {
-  /*if (x == static_cast<int>(head_x) && y == static_cast<int>(head_y)) {
-    return true;
-  }*/
   if ((x >= head_x) && (x <= (head_x + size)) && ((y >= head_y) && (y <= (head_y + size)))){
     return true;
   }
@@ -218,11 +162,42 @@ void Turtle::SetAlive(bool state){
  * Private Functions
  ******************************************************************************/
 
+/* State Functions ************************************************************/
+void Turtle::Walk(){
+  UpdateHead();
+  // check if walked enough
+  if(steps >= curr_instruction.steps_){
+    curr_instruction.completed = true;
+    steps = 0;
+  }
+  else
+  {
+    DetectWall();
+  }
+}
+
+void Turtle::Turn(){
+    UpdateRotation();
+    if(rotation == curr_instruction.steps_){
+      curr_instruction.completed = true;
+    }
+}
+
+void Turtle::Sleep(){
+  sleep_counter++;
+  if (sleep_counter >= curr_instruction.steps_)
+  {
+    curr_instruction.completed = true;
+    sleep_counter = 0;
+  }
+}
+
 /* Update Functions ***********************************************************/
 
+/* update rotation while turning */
 void Turtle::UpdateRotation() {
   // decide to turn left or right.
-  int diff = target_rotation_ - rotation;
+  int diff = curr_instruction.steps_ - rotation;
   if(diff > 180 || (diff > -180 && diff < 0))
   {
     rotation = rotation - rotation_step;
@@ -239,6 +214,7 @@ void Turtle::UpdateRotation() {
   }
 }
 
+/* Update Head position while walking */
 void Turtle::UpdateHead() {
   switch (rotation) {
     case 0:
@@ -280,9 +256,8 @@ void Turtle::UpdateHead() {
   steps++;
 }
 
-
+/* check for wall in the current sourroundings*/
 void Turtle::DetectWall() {
-  // TODO make sure to have turtle always at safe distance from wall (own function?)
   bool wall = false;
   int security_dist = size;
   Wall wall_dir = Wall::None;
@@ -322,77 +297,70 @@ void Turtle::DetectWall() {
   }
   // Rotation change
   if (wall){
-    motion_path.erase(motion_path.begin(), motion_path.end());
+    motion_path.clear();
     // new direction
     NewDirection(wall_dir);
     wall = false;
-    std::cout << "Wall Detected!\n";
-  }
-}
-
-void Turtle::Sleep(){
-  counter++;
-  if (counter >= sleeepcycle)
-  {
-    NewDirection(Wall::None);
-    counter = 0;
+    std::cout << "Found a Wall!\n";
   }
 }
 
 /* State Transitions **********************************************************/
 
+/* Create shaking motion */
 void Turtle::NewShake() {
+  int new_rotation = 0;
   static bool left = false;
-  if(left)
+  motion_path.clear();
+
+  for (int i = 0; i <= shakes; i++)
   {
-    target_rotation_ = rotation - 45;
-    left = false;
+    if(left)
+    {
+      new_rotation = rotation - 45;
+      left = false;
+    }
+    else
+    {
+      new_rotation = rotation + 45;
+      left = true;
+    }
+    motion_path.push_back( Instruction(Action::Turn, new_rotation) );
   }
-  else
-  {
-    target_rotation_ = rotation + 45;
-    left = true;
-  }
-  shakes_to_go++;
 }
 
+/* Set new random walking distance */
 void Turtle::NewWalk(){
- // Seed with a real random value, if available
   std::random_device r;
-
-  // Choose a random mean between 1 and 6
-  //std::default_random_engine e1(r());
   std::mt19937 e2(r());
-  //TODO better maximal length of walk
   std::uniform_int_distribution<int> uniform_dist(10, grid_width/2);
-  steps_to_go = uniform_dist(e2);
+  int distance = uniform_dist(e2);
 
-  state = State::Walk;
-  std::cout << "Going to Walk " << steps_to_go << " Steps!\n";
-  //std::cout << "Head x: " << head_x << " y: " << head_y << " \n";
+  motion_path.push_back( Instruction(Action::Walk, distance) );
+  state = State::Moving;
 
 }
 
+/* set new random walking direction*/
 void Turtle::NewDirection(Wall wall){
-  // Seed with a real random value, if available
   std::random_device r;
   bool clear = false;
   int new_dir = 0;
 
   // Choose a random mean between 1 and 6
-  //std::default_random_engine e1(r());
   std::mt19937 e2(r());
   std::uniform_int_distribution<int> uniform_dist(0, 6);
 
+  // avoid wall if present
   while(!clear){
+    // create direction
     int mean = uniform_dist(e2);
-
-    // new rotation
     new_dir = (45 * mean);
     if(new_dir >= 360){
       new_dir = new_dir - 360;
     }
 
+    // avoid wall
     switch (wall)
     {
       case Wall::Top :
@@ -425,25 +393,14 @@ void Turtle::NewDirection(Wall wall){
     }
   }
 
-  target_rotation_ = new_dir;
-  state = State::Turn;
-  std::cout << "Turning to " << target_rotation_ << "!\n";
-}
+  motion_path.push_back( Instruction(Action::Turn, new_dir) );
+  state = State::Moving;
 
-void Turtle::GoSleep(){
-  static int cnt = 0;
-  cnt++;
-  if (cnt >= 500)
-  {
-    state = State::Sleep;
-    std::cout << "Going to Sleep!\n";
-    cnt = 0;
-  }
 }
 
 /* Helper Functions ***********************************************************/
 
-
+/* get direction and distance from two points */
 Turtle::TargetVector Turtle::GetTargetVector(int x_start, int y_start, int x_end, int y_end){
     // definition of normal up
     int x1 = 0;
@@ -469,9 +426,9 @@ Turtle::TargetVector Turtle::GetTargetVector(int x_start, int y_start, int x_end
     return TargetVector(dir_deg_rnd, dist_rnd);
 }
 
+/* convert to turtle grid based directions and distances */
 void Turtle::ConvertToTurtleVector(TargetVector *target){
     // get nearest walkable rotation
-    std::cout << "Converting " << target->dir << " to ";
     int rot_steps = nearbyint(static_cast<float>(target->dir) / 45.0);
     // protect from larger than 360 deg
     if (rot_steps >= 8){
@@ -480,14 +437,13 @@ void Turtle::ConvertToTurtleVector(TargetVector *target){
     // Write in 45 deg steps
     target->dir = rot_steps * 45;
 
-    std::cout << target->dir << " \n";
-
     // check for diagonal walking direction
     if(rot_steps%2 != 0){
       target->dist = target->dist / sqrt(2);
     }
 }
 
+/* get end point of given path */
 utilities::Coordinate Turtle::GetTargetCoordinate(int x, int y, int dir, int dist){
     int x2 = 0;
     int y2 = 0;
@@ -535,7 +491,7 @@ utilities::Coordinate Turtle::GetTargetCoordinate(int x, int y, int dir, int dis
       y2 = y - dist;
       break;
     default:
-      std::cout << "INVALID FUNCTION CALL! -GetTargetXY- \n";
+      std::cout << "Invalid Function Call! -GetTargetXY- \n";
     }
 
     return utilities::Coordinate(x2,y2);

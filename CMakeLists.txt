@@ -36,10 +36,3 @@ add_custom_target(copy_assets
 )
 
 add_dependencies(TurtleGame copy_assets)
-
-# Tests
-add_executable(TurtleTest 
-    src/turtle_test.cpp
-    src/turtle.cpp
-)
-target_link_libraries(TurtleTest ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})

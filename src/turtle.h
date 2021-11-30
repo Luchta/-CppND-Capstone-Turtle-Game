@@ -10,55 +10,55 @@
 
 class Turtle {
  public:
-  Turtle(int grid_width, int grid_height)
-      : grid_width(grid_width),
-        grid_height(grid_height),
-        head_x(grid_width / 2),
-        head_y(grid_height / 2) {}
+   Turtle(int grid_width, int grid_height);
 
-  void Update();
-  void CheckForFood(int x, int y);
-  void EatFood();
-  void Poke();
-  bool TurtleCell(int x, int y);
+   void Update();
+   void CheckForFood(int x, int y);
+   void EatFood();
+   void Poke();
+   bool TurtleCell(int x, int y);
 
-  // Getters
-  bool GetAlive() const;
-  utilities::Coordinate GetHead() const;
-  int GetSize() const;
+   // Getters
+   bool GetAlive() const;
+   utilities::Coordinate GetHead() const;
+   int GetSize() const;
 
-  // Setters
-  void SetSpeed(int refresh_rate);
-  void SetAlive(bool state);
+   // Setters
+   void SetSpeed(int refresh_rate);
+   void SetAlive(bool state);
 
-private:
-  
-  // Enumerations
+ private:
+   // Enumerations
+   enum class Action
+   {
+     Walk,
+     Turn,
+     Sleep
+   };
+   enum class Wall
+   {
+     Top,
+     Left,
+     Right,
+     Bottom,
+     None
+   };
   enum class State
-  {
-    Walk,
-    Turn,
-    Sleep,
-    Feed,
-    Shake
-  };
-  enum class Wall
-  {
-    Top,
-    Left,
-    Right,
-    Bottom,
-    None
-  };
+   {
+     Moving,
+     Feeding,
+     Shaking
+   };
 
-  // Data classes
-  class Instruction {
-    public:
-      Instruction(State action, int steps) : action_(action), steps_(steps) {}
-      
-      State action_;
-      int steps_;
-      bool completed = false;
+   // Data classes
+   class Instruction
+   {
+   public:
+     Instruction(Action action, int steps) : action_(action), steps_(steps) {}
+
+     Action action_;
+     int steps_;
+     bool completed = false;
   };
   class TargetVector {
     public:
@@ -67,15 +67,20 @@ private:
       int dist;
   };
   
+  // State Functions
+  void Walk();
+  void Turn();
+  void Sleep();
+  void Feed();
+  void Shake();
+
   // Update Functions
   void UpdateHead();
   void UpdateRotation();
-  void Sleep();
   // State Transitions
   void NewDirection(Wall wall);
   void NewWalk();
   void NewShake();
-  void GoSleep();
   // Helper Functions
   void DetectWall();
   TargetVector GetTargetVector(int x_start, int y_start, int x_end, int y_end);
@@ -87,13 +92,15 @@ private:
   const int grid_height;
 
   // Constant parameters
+  const int size{8};
+  const int shakes{8};
   const int sleeepcycle{20};
   const int walking_step{1};
   const int rotation_step{5};
-  const int size{8};
 
   // interal state variable
-  State state = State::Sleep;
+  State state = State::Moving;
+  Instruction curr_instruction;
   bool alive{true};
   int head_x;
   int head_y;
@@ -101,14 +108,8 @@ private:
   int stepping_speed = 4;
 
   // counters and targets
-  int target_rotation_{0};
-  int steps_to_go{5};
   int steps{0};
-  int shakes_to_go{0};
-  int counter{0};
-
-
-
+  int sleep_counter{0};
 
   std::deque<Instruction> motion_path;
   /*
