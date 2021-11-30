@@ -8,7 +8,7 @@ In this project, I extended the Snake game, to create a pet simulation similarly
 In main.cpp three different difficulty levels can be given to the game.
 
 ## Structure
-The verall structure follows the Snake Game example.
+The overall structure follows the Snake Game example.
 Main creates a Controller, Game and Render Object.
 The Game object stores a unique pointer to a turtle object.
 Controller and Renderer are handed to the run function, which starts the Gameloop.
