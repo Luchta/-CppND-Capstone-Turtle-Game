@@ -13,7 +13,7 @@ class Renderer {
   ~Renderer();
 
   void Render(utilities::Food const &food, Turtle const* turtle);
-  void UpdateWindowTitle(int hunger, int score, int fps);
+  void UpdateWindowTitle(int energy, int score, int fps);
 
  private:
   SDL_Window *sdl_window;

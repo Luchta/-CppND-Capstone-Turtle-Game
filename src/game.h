@@ -39,9 +39,12 @@ private:
   const int g_height;
   const int s_width;
   const int s_height;
+  const int level_hard{15};
+  const int level_medium{60};
+  const int level_easy{100};
   int score{0};
-  int hunger{0};
-  int max_hunger{60};
+  int energy{0};
+  int max_energy{0};
   void PlaceFood(int x, int y);
   void Update();
   void HandleClick();

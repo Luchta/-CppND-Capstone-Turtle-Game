@@ -93,7 +93,7 @@ class Turtle {
 
   // Constant parameters
   const int size{8};
-  const int shakes{8};
+  const int shakes{5};
   const int sleeepcycle{20};
   const int walking_step{1};
   const int rotation_step{5};
@@ -105,22 +105,13 @@ class Turtle {
   int head_x;
   int head_y;
   int rotation = 0;
-  int stepping_speed = 4;
+  int stepping_speed = 3;
 
   // counters and targets
   int steps{0};
   int sleep_counter{0};
 
   std::deque<Instruction> motion_path;
-  /*
-  std::random_device dev2;
-  std::mt19937 engine2;
-  std::uniform_int_distribution<int> random_dir;
-
-  engine2(dev2()),
-  random_dir(0,7) 
-*/
-
 
 };
 

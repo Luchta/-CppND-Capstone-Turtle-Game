@@ -318,11 +318,18 @@ void Turtle::NewShake() {
     if(left)
     {
       new_rotation = rotation - 45;
+      if(new_rotation < 0){
+        new_rotation = new_rotation + 360;
+      }
       left = false;
     }
     else
     {
       new_rotation = rotation + 45;
+      if(new_rotation >= 360){
+        new_rotation = new_rotation - 360;
+      }
+
       left = true;
     }
     motion_path.push_back( Instruction(Action::Turn, new_rotation) );

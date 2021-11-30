@@ -17,13 +17,16 @@ Game::Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid
   switch (difficulty)
   {
     case Difficulty::Easy:
-      max_hunger = 80;
+      max_energy = level_easy;
+      energy = level_easy;
       break;
     case Difficulty::Medium:
-      max_hunger = 40;
+      max_energy = level_medium;
+      energy = level_medium;
       break;
     case Difficulty::Hard:
-      max_hunger = 15;
+      max_energy = level_hard;
+      energy = level_hard;
       break;
   }
 
@@ -81,7 +84,6 @@ Game& Game::operator=(const Game& other)
 void Game::Run(Controller const &controller, Renderer &renderer,
                std::size_t target_frame_duration) {
   Uint32 title_timestamp = SDL_GetTicks();
-  Uint32 hunger_timestamp = SDL_GetTicks();
   Uint32 frame_start;
   Uint32 frame_end;
   Uint32 frame_duration;
@@ -104,17 +106,15 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     frame_count++;
     frame_duration = frame_end - frame_start;
 
-    // Update Hunger 
-    if (frame_end - hunger_timestamp >= 500 && pTurtle->GetAlive()) {
-      hunger++;
-      hunger_timestamp = frame_end;
-    }
-
-    // After every second, update the window title.
+    // After every half second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(hunger, score, frame_count);
+      renderer.UpdateWindowTitle(energy, score, frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
+      // Update Energy if alive 
+      if(pTurtle->GetAlive()){
+        energy--;
+      }
     }
 
     // If the time for this frame is too small (i.e. frame_duration is
@@ -138,6 +138,7 @@ void Game::HandleClick() {
       if (pTurtle->TurtleCell(grid_x, grid_y))
       {
         pTurtle->Poke();
+        energy = energy - 10;
       }
       else
       {
@@ -169,14 +170,14 @@ void Game::Update() {
     pTurtle->CheckForFood(food.point.x, food.point.y);
   }
 
-  if(hunger >= max_hunger){
+  if(energy <= 0){
     pTurtle->SetAlive(false);
   }
 
   // Check if there's food over here
   if (pTurtle->TurtleCell(food.point.x, food.point.y) && food.active) {
     score++;
-    hunger = 0;
+    energy = max_energy;
     pTurtle->SetSpeed(3);
     food.active = false;
   }

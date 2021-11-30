@@ -90,7 +90,7 @@ void Renderer::Render(utilities::Food const &food, Turtle const* turtle) {
   SDL_RenderPresent(sdl_renderer);
 }
 
-void Renderer::UpdateWindowTitle(int hunger, int score, int fps) {
-  std::string title{"Hunger: " + std::to_string(hunger) + " Score: " + std::to_string(score) + " FPS: " + std::to_string(fps)};
+void Renderer::UpdateWindowTitle(int energy, int score, int fps) {
+  std::string title{"Energy: " + std::to_string(energy) + " Score: " + std::to_string(score) + " FPS: " + std::to_string(fps)};
   SDL_SetWindowTitle(sdl_window, title.c_str());
 }
