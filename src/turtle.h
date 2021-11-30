@@ -5,124 +5,114 @@
 #include <random>
 #include <queue>
 
-
 #include "SDL.h"
+#include "utils.h"
 
 class Turtle {
  public:
-  enum class Direction2 
-  { 
-    k0 =  0, 
-    k45 = 45,
-    k90 = 90,
-    k135 = 135,
-    k180 = 180,
-    k225 = 255,
-    k270 = 270,
-    k315 = 315
-  };
+   Turtle(int grid_width, int grid_height);
+
+   void Update();
+   void CheckForFood(int x, int y);
+   void EatFood();
+   void Poke();
+   bool TurtleCell(int x, int y);
+
+   // Getters
+   bool GetAlive() const;
+   utilities::Coordinate GetHead() const;
+   int GetSize() const;
+
+   // Setters
+   void SetSpeed(int refresh_rate);
+   void SetAlive(bool state);
+
+ private:
+   // Enumerations
+   enum class Action
+   {
+     Walk,
+     Turn,
+     Sleep
+   };
+   enum class Wall
+   {
+     Top,
+     Left,
+     Right,
+     Bottom,
+     None
+   };
   enum class State
-  {
-    Walk,
-    Turn,
-    Sleep,
-    Feed
-  };
-  enum class Wall
-  {
-    Top,
-    Left,
-    Right,
-    Bottom,
-    None
-  };
+   {
+     Moving,
+     Feeding,
+     Shaking
+   };
 
-  class Instruction {
-    public:
-      Instruction(State action, int steps) : action_(action), steps_(steps) {}
-      
-      State action_;
-      int steps_;
-      bool completed = false;
-  };
+   // Data classes
+   class Instruction
+   {
+   public:
+     Instruction(Action action, int steps) : action_(action), steps_(steps) {}
 
+     Action action_;
+     int steps_;
+     bool completed = false;
+  };
   class TargetVector {
     public:
       TargetVector(int dir_, int dist_) : dir(dir_), dist(dist_) {}
       int dir;
       int dist;
   };
+  
+  // State Functions
+  void Walk();
+  void Turn();
+  void Sleep();
+  void Feed();
+  void Shake();
 
-  class Coordinate {
-    public:
-      Coordinate(int x_, int y_) : x(x_), y(y_) {}
-      int x;
-      int y;
-  };
+  // Update Functions
+  void UpdateHead();
+  void UpdateRotation();
+  // State Transitions
+  void NewDirection(Wall wall);
+  void NewWalk();
+  void NewShake();
+  // Helper Functions
+  void DetectWall();
+  TargetVector GetTargetVector(int x_start, int y_start, int x_end, int y_end);
+  void ConvertToTurtleVector(TargetVector *target);
+  utilities::Coordinate GetTargetCoordinate(int x, int y, int dir, int dist);
 
-  Turtle(int grid_width, int grid_height)
-      : grid_width(grid_width),
-        grid_height(grid_height),
-        head_x(grid_width / 2),
-        head_y(grid_height / 2) {}
+  // Constants
+  const int grid_width;
+  const int grid_height;
 
-  void Update();
+  // Constant parameters
+  const int size{8};
+  const int shakes{5};
+  const int sleeepcycle{20};
+  const int walking_step{1};
+  const int rotation_step{5};
 
-  bool TurtleCell(int x, int y);
-  void CheckForFood(int x, int y);
-
-
-  //Direction2 direction = Direction2::k0;
-
-  int speed{1};
+  // interal state variable
+  State state = State::Moving;
+  Instruction curr_instruction;
   bool alive{true};
   int head_x;
   int head_y;
   int rotation = 0;
-  int size = 8;
-  std::vector<SDL_Point> body;
+  int stepping_speed = 3;
 
-  int update_steps = 0;
-  int speed_steps = 2;
+  // counters and targets
+  int steps{0};
+  int sleep_counter{0};
 
-private:
-  void RandomMove();
-  void ChaseFood();
-  void GoSleep();
-  void Sleep();
-  void UpdateHead();
-  void UpdateRotation();
-  void DetectWall();
-  void NewDirection(Wall wall);
-  void NewWalk();
-  TargetVector GetTargetVector(int x_start, int y_start, int x_end, int y_end);
-  void ConvertToTurtleVector(TargetVector *target);
-  Coordinate GetTargetCoordinate(int x, int y, int dir, int dist);
-
-  Direction2 direction = Direction2::k0;
-  State state = State::Sleep;
-
-  int target_rotation_ = 0;
-
-  int grid_width;
-  int grid_height;
-  int steps_to_go = 5;
-  int steps = 0;
-
-  bool turn_left = false;
-  int sleeepcycle = 20;
-  int counter = 0;
-
-   
   std::deque<Instruction> motion_path;
-  /*
-  std::random_device dev2;
-  std::mt19937 engine2;
-  std::uniform_int_distribution<int> random_dir;
 
-  engine2(dev2()),
-  random_dir(0,7) 
-*/
 };
 
 #endif //TURTLE_H

@@ -2,14 +2,84 @@
 #include <iostream>
 #include "SDL.h"
 
-Game::Game(std::size_t grid_width, std::size_t grid_height)
-    : snake(grid_width, grid_height),
-      turtle(grid_width, grid_height),
-      engine(dev()),
-      random_w(0, static_cast<int>(grid_width - 1)),
-      random_h(0, static_cast<int>(grid_height - 1)) {
-  PlaceFood();
+Game::Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid_width, std::size_t grid_height, Difficulty difficulty)
+    : curr_click(),
+      food(),
+      g_width(grid_width),
+      g_height(grid_height),
+      s_width(screen_width),
+      s_height(screen_height) {
+  
+  pTurtle = std::unique_ptr<Turtle>(new Turtle(grid_width, grid_height));
+  food.active = false;
+  curr_click.active = false;
+
+  switch (difficulty)
+  {
+    case Difficulty::Easy:
+      max_energy = level_easy;
+      energy = level_easy;
+      break;
+    case Difficulty::Medium:
+      max_energy = level_medium;
+      energy = level_medium;
+      break;
+    case Difficulty::Hard:
+      max_energy = level_hard;
+      energy = level_hard;
+      break;
+  }
+
 }
+
+/* Rule of 5 ******************************************************************/
+
+
+Game::Game(const Game &other)
+    : g_width(other.g_width),
+      g_height(other.g_height),
+      s_width(other.s_width),
+      s_height(other.s_height) {
+    std::cout << "Game Copy Constructor" << std::endl;
+    pTurtle = std::unique_ptr<Turtle>(new Turtle(g_width, g_height));
+}
+
+Game::Game(Game &&other)
+    : g_width(other.g_width),
+      g_height(other.g_height),
+      s_width(other.s_width),
+      s_height(other.s_height) {
+    std::cout << "Game Move Constructor" << std::endl;
+
+    // move turtle from heap memory
+    this->pTurtle = std::move(other.pTurtle);
+    other.pTurtle = nullptr;
+}
+
+Game& Game::operator=(const Game& other) 
+{
+    std::cout << "Game Copy Assignment Operator" << std::endl;
+    if(this == &other) {
+        return *this;
+    }
+
+    return *this = Game(other);
+}
+
+ Game& Game::operator=(Game &&other)
+{
+    std::cout << "Game Move Assignment Operator" << std::endl;
+    if(this == &other) {
+        return *this;
+    }
+
+    // move turtle from heap memory
+    this->pTurtle = std::move(other.pTurtle);
+    other.pTurtle = nullptr;
+    return *this;
+}
+
+/* Interactions ***************************************************************/
 
 void Game::Run(Controller const &controller, Renderer &renderer,
                std::size_t target_frame_duration) {
@@ -24,9 +94,10 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     frame_start = SDL_GetTicks();
 
     // Input, Update, Render - the main game loop.
-    controller.HandleInput(running, snake);
+    controller.HandleInput(running, curr_click);
+    HandleClick();
     Update();
-    renderer.Render(snake, food, turtle);
+    renderer.Render(food, pTurtle.get());
 
     frame_end = SDL_GetTicks();
 
@@ -35,11 +106,15 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     frame_count++;
     frame_duration = frame_end - frame_start;
 
-    // After every second, update the window title.
+    // After every half second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(score, frame_count);
+      renderer.UpdateWindowTitle(energy, score, frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
+      // Update Energy if alive 
+      if(pTurtle->GetAlive()){
+        energy--;
+      }
     }
 
     // If the time for this frame is too small (i.e. frame_duration is
@@ -51,47 +126,61 @@ void Game::Run(Controller const &controller, Renderer &renderer,
   }
 }
 
-void Game::PlaceFood() {
-  int x, y;
-  while (true) {
-    x = random_w(engine);
-    y = random_h(engine);
-    // Check that the location is not occupied by a snake item before placing
-    // food.
-    if (!snake.SnakeCell(x, y)) {
-      food.x = x;
-      food.y = y;
-      return;
+void Game::HandleClick() {
+  if (curr_click.active)
+  {
+    bool valid_x = ((curr_click.coord.x >= 0) && (curr_click.coord.x <= s_width));
+    bool valid_y = ((curr_click.coord.y >= 0) && (curr_click.coord.y <= s_height));
+    if (valid_x && valid_y)
+    {
+      int grid_x = curr_click.coord.x / (s_width / g_width);
+      int grid_y = curr_click.coord.y / (s_height / g_height);
+      if (pTurtle->TurtleCell(grid_x, grid_y))
+      {
+        pTurtle->Poke();
+        energy = energy - 10;
+      }
+      else
+      {
+        PlaceFood(grid_x, grid_y);
+      }
     }
+    else
+    {
+      std::cout << "Invalid click!" << curr_click.coord.x<< "," << curr_click.coord.y<< "\n ";
+    }
+  curr_click.active = false;
+  }
+}
+
+void Game::PlaceFood(int x, int y) {
+  if(!food.active){
+    food.point.x = x;
+    food.point.y = y;
+    food.active = true;
   }
 }
 
 void Game::Update() {
-  if (!snake.alive) return;
+  if (!pTurtle->GetAlive()) return;
 
-  snake.Update();
-  turtle.Update();
+  pTurtle->Update();
 
-  //TODO FIXME avoid getting stuck in looking at food 
-  //static int cnt = 0;
-  //if (cnt >= 3){
-      turtle.CheckForFood(food.x, food.y);
-  //    cnt = 0;
-  //}
-  //cnt++;
+  if (food.active){
+    pTurtle->CheckForFood(food.point.x, food.point.y);
+  }
 
-  int new_x = static_cast<int>(snake.head_x);
-  int new_y = static_cast<int>(snake.head_y);
+  if(energy <= 0){
+    pTurtle->SetAlive(false);
+  }
 
   // Check if there's food over here
-  if (turtle.TurtleCell(food.x, food.y)) {
+  if (pTurtle->TurtleCell(food.point.x, food.point.y) && food.active) {
     score++;
-    PlaceFood();
-    // Grow snake and increase speed.
-    //snake.GrowBody();
-    //snake.speed += 0.02;
+    energy = max_energy;
+    pTurtle->SetSpeed(3);
+    food.active = false;
   }
 }
 
 int Game::GetScore() const { return score; }
-int Game::GetSize() const { return snake.size; }

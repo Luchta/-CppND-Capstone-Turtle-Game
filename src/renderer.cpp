@@ -18,7 +18,7 @@ Renderer::Renderer(const std::size_t screen_width,
   }
 
   // Create Window
-  sdl_window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED,
+  sdl_window = SDL_CreateWindow("Turtle Game", SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED, screen_width,
                                 screen_height, SDL_WINDOW_SHOWN);
 
@@ -51,7 +51,7 @@ Renderer::~Renderer() {
   SDL_Quit();
 }
 
-void Renderer::Render(Snake const snake, SDL_Point const &food, Turtle const turtle) {
+void Renderer::Render(utilities::Food const &food, Turtle const* turtle) {
   SDL_Rect block;
   block.w = screen_width / grid_width;
   block.h = screen_height / grid_height;
@@ -61,50 +61,36 @@ void Renderer::Render(Snake const snake, SDL_Point const &food, Turtle const tur
   SDL_RenderClear(sdl_renderer);
 
   // Render food
-  SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xCC, 0x00, 0xFF);
-  block.x = food.x * block.w;
-  block.y = food.y * block.h;
-  SDL_RenderFillRect(sdl_renderer, &block);
+  if(food.active){
+    SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xCC, 0x00, 0xFF);
+    block.x = food.point.x * block.w;
+    block.y = food.point.y * block.h;
+    SDL_RenderFillRect(sdl_renderer, &block);
+  }
 
 
   // Turtle dimensions/position
-  SDL_Rect flagRect;
-  // Scale the turtle dimensions to fit the screen
-  flagRect.w = block.w * turtle.size;
-  flagRect.h = flagRect.w;
-  // turtle position: In the middle of the screen
-  flagRect.x = (static_cast<int>(turtle.head_x) * block.w);// -(2 * block.w);
-  flagRect.y = (static_cast<int>(turtle.head_y) * block.h);
- // -(2 * block.h);
-  // Render Turtle
-  SDL_RenderCopyEx(sdl_renderer, flag, NULL, &flagRect, turtle.rotation, NULL, SDL_FLIP_NONE);
-
-
-  // Render snake's body
-  
-  SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-  for (SDL_Point const &point : snake.body) {
-    block.x = point.x * block.w;
-    block.y = point.y * block.h;
-    SDL_RenderFillRect(sdl_renderer, &block);
-  }
-  
- 
-  /* Render snake's head
-  block.x = static_cast<int>(snake.head_x) * block.w;
-  block.y = static_cast<int>(snake.head_y) * block.h;
-  if (snake.alive) {
-    SDL_SetRenderDrawColor(sdl_renderer, 0x00, 0x7A, 0xCC, 0xFF);
-  } else {
+  SDL_Rect turtleRect;
+  utilities::Coordinate turtleHead = turtle->GetHead();
+  // Scale the rect to size of turtle
+  turtleRect.w = block.w * turtle->GetSize();
+  turtleRect.h = turtleRect.w;
+  // turtle position according to grid(block) size 
+  turtleRect.x = (turtleHead.x) * block.w;
+  turtleRect.y = (turtleHead.y) * block.h;
+  // red if dead
+  if(!turtle->GetAlive()){
     SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0x00, 0x00, 0xFF);
-  }*/
-  //SDL_RenderFillRect(sdl_renderer, &block);
-
+    SDL_RenderFillRect(sdl_renderer, &turtleRect);
+  }
+  // Render Turtle in rect
+  SDL_RenderCopyEx(sdl_renderer, flag, NULL, &turtleRect, turtleHead.rot, NULL, SDL_FLIP_NONE);
+  
   // Update Screen
   SDL_RenderPresent(sdl_renderer);
 }
 
-void Renderer::UpdateWindowTitle(int score, int fps) {
-  std::string title{"Snake Score: " + std::to_string(score) + " FPS: " + std::to_string(fps)};
+void Renderer::UpdateWindowTitle(int energy, int score, int fps) {
+  std::string title{"Energy: " + std::to_string(energy) + " Score: " + std::to_string(score) + " FPS: " + std::to_string(fps)};
   SDL_SetWindowTitle(sdl_window, title.c_str());
 }
