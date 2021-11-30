@@ -12,8 +12,8 @@ class Renderer {
            const std::size_t grid_width, const std::size_t grid_height);
   ~Renderer();
 
-  void Render(utilities::Food const &food, Turtle const turtle);
-  void UpdateWindowTitle(int score, int fps);
+  void Render(utilities::Food const &food, Turtle const* turtle);
+  void UpdateWindowTitle(int hunger, int score, int fps);
 
  private:
   SDL_Window *sdl_window;

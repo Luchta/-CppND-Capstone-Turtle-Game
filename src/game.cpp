@@ -2,9 +2,8 @@
 #include <iostream>
 #include "SDL.h"
 
-Game::Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid_width, std::size_t grid_height)
-    : turtle(grid_width, grid_height),
-      engine(dev()),
+Game::Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid_width, std::size_t grid_height, Difficulty difficulty)
+    : engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
       random_h(0, static_cast<int>(grid_height - 1)),
       curr_click(),
@@ -13,13 +12,30 @@ Game::Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid
       g_height(grid_height),
       s_width(screen_width),
       s_height(screen_height) {
+  
+  pTurtle = std::unique_ptr<Turtle>(new Turtle(grid_width, grid_height)); 
+
   PlaceRandomFood();
+
+  switch (difficulty)
+  {
+    case Difficulty::Easy:
+      max_hunger = 80;
+      break;
+    case Difficulty::Medium:
+      max_hunger = 40;
+      break;
+    case Difficulty::Hard:
+      max_hunger = 15;
+      break;
+  }
 
 }
 
 void Game::Run(Controller const &controller, Renderer &renderer,
                std::size_t target_frame_duration) {
   Uint32 title_timestamp = SDL_GetTicks();
+  Uint32 hunger_timestamp = SDL_GetTicks();
   Uint32 frame_start;
   Uint32 frame_end;
   Uint32 frame_duration;
@@ -33,7 +49,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     controller.HandleInput(running, curr_click);
     HandleClick();
     Update();
-    renderer.Render(food, turtle);
+    renderer.Render(food, pTurtle.get());
 
     frame_end = SDL_GetTicks();
 
@@ -42,12 +58,20 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     frame_count++;
     frame_duration = frame_end - frame_start;
 
+    // Update Hunger 
+    if (frame_end - hunger_timestamp >= 500 && pTurtle->GetAlive()) {
+      hunger++;
+      hunger_timestamp = frame_end;
+    }
+
     // After every second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(score, frame_count);
+      renderer.UpdateWindowTitle(hunger, score, frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
     }
+
+
 
     // If the time for this frame is too small (i.e. frame_duration is
     // smaller than the target ms_per_frame), delay the loop to
@@ -64,7 +88,7 @@ void Game::PlaceRandomFood() {
     x = random_w(engine);
     y = random_h(engine);
     // Check that the location is not occupied by an item before placing
-    if (!turtle.TurtleCell(x, y)) {
+    if (!pTurtle->TurtleCell(x, y)) {
       PlaceFood(x, y);
       return;
     }
@@ -80,9 +104,9 @@ void Game::HandleClick() {
     {
       int grid_x = curr_click.coord.x / (s_width / g_width);
       int grid_y = curr_click.coord.y / (s_height / g_height);
-      if (turtle.TurtleCell(grid_x, grid_y))
+      if (pTurtle->TurtleCell(grid_x, grid_y))
       {
-        turtle.Poke();
+        pTurtle->Poke();
       }
       else
       {
@@ -98,23 +122,31 @@ void Game::HandleClick() {
 }
 
 void Game::PlaceFood(int x, int y) {
+  if(!food.active){
     food.point.x = x;
     food.point.y = y;
     food.active = true;
+  }
 }
 
 void Game::Update() {
-  if (!turtle.alive) return;
+  if (!pTurtle->GetAlive()) return;
 
-  turtle.Update();
+  pTurtle->Update();
 
   if (food.active){
-    turtle.CheckForFood(food.point.x, food.point.y);
+    pTurtle->CheckForFood(food.point.x, food.point.y);
+  }
+
+  if(hunger >= max_hunger){
+    pTurtle->SetAlive(false);
   }
 
   // Check if there's food over here
-  if (turtle.TurtleCell(food.point.x, food.point.y) && food.active) {
+  if (pTurtle->TurtleCell(food.point.x, food.point.y) && food.active) {
     score++;
+    hunger = 0;
+    pTurtle->SetSpeed(3);
     food.active = false;
   }
 }

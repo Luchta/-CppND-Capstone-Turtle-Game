@@ -12,7 +12,7 @@
 void Turtle::Update() {
   static int update_counter = 0;
   update_counter++;
-  if (update_counter >= speed_steps)
+  if (update_counter >= stepping_speed)
   {
     update_counter = 0;
 
@@ -29,9 +29,9 @@ void Turtle::Update() {
       if(rotation == target_rotation_){
         NewShake();
       }
-      if(shakes >= 8){
-        shakes = 0;
-        speed_steps = 2;
+      if(shakes_to_go >= 8){
+        shakes_to_go = 0;
+        stepping_speed = 2;
         NewWalk();
       }
       break;
@@ -172,8 +172,11 @@ void Turtle::EatFood(){
 void Turtle::Poke(){
   //increase anoyance level
   state = State::Shake;
-  shakes = 0;
-  speed_steps = 1;
+  shakes_to_go = 0;
+  stepping_speed--;
+  if (stepping_speed <= 0){
+    stepping_speed = 1;
+  }
   NewShake();
 }
 
@@ -188,6 +191,29 @@ bool Turtle::TurtleCell(int x, int y) {
   return false;
 }
 
+/* Getters and Setters ********************************************************/
+
+ bool Turtle::GetAlive() const{
+   return alive;
+ }
+
+ utilities::Coordinate Turtle::GetHead() const{
+   utilities::Coordinate Head(head_x, head_y, rotation);
+   return Head;
+ }
+
+ int Turtle::GetSize() const{
+   return size;
+ }
+
+ void Turtle::SetSpeed(int refresh_rate){
+   stepping_speed = refresh_rate;
+ }
+ 
+void Turtle::SetAlive(bool state){
+  alive = state;
+}
+
 /*******************************************************************************
  * Private Functions
  ******************************************************************************/
@@ -195,16 +221,15 @@ bool Turtle::TurtleCell(int x, int y) {
 /* Update Functions ***********************************************************/
 
 void Turtle::UpdateRotation() {
-  int rot_step = 5;
   // decide to turn left or right.
   int diff = target_rotation_ - rotation;
   if(diff > 180 || (diff > -180 && diff < 0))
   {
-    rotation = rotation - rot_step;
+    rotation = rotation - rotation_step;
   }
   else
   {
-    rotation = rotation + rot_step;
+    rotation = rotation + rotation_step;
   }
   // keep rotation below 360
   if (rotation >= 360){
@@ -217,39 +242,39 @@ void Turtle::UpdateRotation() {
 void Turtle::UpdateHead() {
   switch (rotation) {
     case 0:
-      head_y -= stepsize;
+      head_y -= walking_step;
       break;
 
     case 45:
-      head_x += stepsize;
-      head_y -= stepsize;
+      head_x += walking_step;
+      head_y -= walking_step;
       break;
 
     case 90:
-      head_x += stepsize;
+      head_x += walking_step;
       break;
 
     case 135:
-      head_x += stepsize;
-      head_y += stepsize;
+      head_x += walking_step;
+      head_y += walking_step;
       break;
 
     case 180:
-      head_y += stepsize;
+      head_y += walking_step;
       break;
 
     case 225:
-      head_x -= stepsize;
-      head_y += stepsize;
+      head_x -= walking_step;
+      head_y += walking_step;
       break;
 
     case 270:
-      head_x -= stepsize;
+      head_x -= walking_step;
       break;
 
     case 315:
-      head_x -= stepsize;
-      head_y -= stepsize;
+      head_x -= walking_step;
+      head_y -= walking_step;
       break;
   }
   steps++;
@@ -328,7 +353,7 @@ void Turtle::NewShake() {
     target_rotation_ = rotation + 45;
     left = true;
   }
-  shakes++;
+  shakes_to_go++;
 }
 
 void Turtle::NewWalk(){

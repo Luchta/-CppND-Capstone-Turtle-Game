@@ -7,9 +7,10 @@ namespace utilities {
 
     class Coordinate {
     public:
-        Coordinate(int x_, int y_) : x(x_), y(y_) {}
+        Coordinate(int x_, int y_, int rot_=0) : x(x_), y(y_), rot(rot_) {}
         int x;
         int y;
+        int rot;
     };
 
     class Click_Message {

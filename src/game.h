@@ -2,20 +2,29 @@
 #define GAME_H
 
 #include <random>
+#include <memory>
 #include "SDL.h"
 #include "controller.h"
 #include "renderer.h"
 #include "turtle.h"
 
+enum class Difficulty
+{
+  Easy,
+  Medium,
+  Hard
+};
+
 class Game {
  public:
-  Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid_width, std::size_t grid_height);
+  Game(std::size_t screen_width, std::size_t screen_height, std::size_t grid_width, std::size_t grid_height, Difficulty difficulty);
   void Run(Controller const &controller, Renderer &renderer,
            std::size_t target_frame_duration);
   int GetScore() const;
 
 private:
-  Turtle turtle;
+  std::unique_ptr<Turtle> pTurtle;
+  std::vector<utilities::Food> foods;
   utilities::Food food;
 
   std::random_device dev;
@@ -30,6 +39,8 @@ private:
   const int s_width;
   const int s_height;
   int score{0};
+  int hunger{0};
+  int max_hunger{60};
   void PlaceFood(int x, int y);
   void PlaceRandomFood();
   void Update();

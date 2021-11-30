@@ -22,12 +22,14 @@ class Turtle {
   void Poke();
   bool TurtleCell(int x, int y);
 
-  bool alive{true};
-  int head_x;
-  int head_y;
-  int rotation = 0;
-  int size = 8;
-  int speed_steps = 3;
+  // Getters
+  bool GetAlive() const;
+  utilities::Coordinate GetHead() const;
+  int GetSize() const;
+
+  // Setters
+  void SetSpeed(int refresh_rate);
+  void SetAlive(bool state);
 
 private:
   
@@ -83,20 +85,30 @@ private:
   // Constants
   const int grid_width;
   const int grid_height;
-  
+
+  // Constant parameters
+  const int sleeepcycle{20};
+  const int walking_step{1};
+  const int rotation_step{5};
+  const int size{8};
+
   // interal state variable
   State state = State::Sleep;
+  bool alive{true};
+  int head_x;
+  int head_y;
+  int rotation = 0;
+  int stepping_speed = 4;
 
   // counters and targets
-  int target_rotation_ = 0;
-  int steps_to_go = 5;
-  int steps = 0;
-  int shakes = 0;
-  int counter = 0;
+  int target_rotation_{0};
+  int steps_to_go{5};
+  int steps{0};
+  int shakes_to_go{0};
+  int counter{0};
 
-  // parameters
-  int sleeepcycle = 20;
-  int stepsize = 1;
+
+
 
   std::deque<Instruction> motion_path;
   /*

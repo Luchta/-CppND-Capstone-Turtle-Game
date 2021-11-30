@@ -51,7 +51,7 @@ Renderer::~Renderer() {
   SDL_Quit();
 }
 
-void Renderer::Render(utilities::Food const &food, Turtle const turtle) {
+void Renderer::Render(utilities::Food const &food, Turtle const* turtle) {
   SDL_Rect block;
   block.w = screen_width / grid_width;
   block.h = screen_height / grid_height;
@@ -68,22 +68,29 @@ void Renderer::Render(utilities::Food const &food, Turtle const turtle) {
     SDL_RenderFillRect(sdl_renderer, &block);
   }
 
+
   // Turtle dimensions/position
-  SDL_Rect flagRect;
-  // Scale the turtle dimensions to fit the screen
-  flagRect.w = block.w * turtle.size;
-  flagRect.h = flagRect.w;
-  // turtle position: In the middle of the screen
-  flagRect.x = (static_cast<int>(turtle.head_x) * block.w);// -(2 * block.w);
-  flagRect.y = (static_cast<int>(turtle.head_y) * block.h);// -(2 * block.h);
-  // Render Turtle
-  SDL_RenderCopyEx(sdl_renderer, flag, NULL, &flagRect, turtle.rotation, NULL, SDL_FLIP_NONE);
+  SDL_Rect turtleRect;
+  utilities::Coordinate turtleHead = turtle->GetHead();
+  // Scale the rect to size of turtle
+  turtleRect.w = block.w * turtle->GetSize();
+  turtleRect.h = turtleRect.w;
+  // turtle position according to grid(block) size 
+  turtleRect.x = (turtleHead.x) * block.w;
+  turtleRect.y = (turtleHead.y) * block.h;
+  // red if dead
+  if(!turtle->GetAlive()){
+    SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0x00, 0x00, 0xFF);
+    SDL_RenderFillRect(sdl_renderer, &turtleRect);
+  }
+  // Render Turtle in rect
+  SDL_RenderCopyEx(sdl_renderer, flag, NULL, &turtleRect, turtleHead.rot, NULL, SDL_FLIP_NONE);
   
   // Update Screen
   SDL_RenderPresent(sdl_renderer);
 }
 
-void Renderer::UpdateWindowTitle(int score, int fps) {
-  std::string title{"Turtle Food: " + std::to_string(score) + " FPS: " + std::to_string(fps)};
+void Renderer::UpdateWindowTitle(int hunger, int score, int fps) {
+  std::string title{"Hunger: " + std::to_string(hunger) + " Score: " + std::to_string(score) + " FPS: " + std::to_string(fps)};
   SDL_SetWindowTitle(sdl_window, title.c_str());
 }
