@@ -2,12 +2,16 @@
 
 This is a submission repo for the Capstone project in the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213). The code for this repo is based on [this](https://github.com/udacity/CppND-Capstone-Snake-Game) provided snake game example.
 
-<img src="snake_game.gif"/>
+<img src="turtle_game.gif"/>
 
 In this project, I extended the Snake game, to create a pet simulation similarly to the tamagochi. The Game is a turtle simulation with the goal of feeding the turtle to keep it in a good mood. Food can be placed by clicking into the game area, but watch out! clicking the turtle will reduce the remaining mood. Longest time alive will be added to a list and saved.
 
 ## Structure
-
+The verall structure follows the Snake Game example.
+Main creates a Controller, Game and Render Object.
+The Game object stores a unique pointer to a turtle object.
+Controller and Renderer are handed to the run function, which starts the Gameloop.
+A utilities namespace contains helper calsses to store and pass information.
 
 ## Addressed rubrics
 * Loops, Functions, I/O
@@ -18,7 +22,7 @@ In this project, I extended the Snake game, to create a pet simulation similarly
   * class structure see turtle.h/.cpp
   * member init lists turtle.cpp - 13-17
 * Memory Management
-  * TODO
+  * Addressed in game.h with a unique pointer to the heap. The game class follows the rule of 5
 * Concurrency
   * Not Addressed
 
