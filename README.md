@@ -4,7 +4,7 @@ This is a submission repo for the Capstone project in the [Udacity C++ Nanodegre
 
 <img src="turtle_game.gif"/>
 
-In this project, I extended the Snake game, to create a pet simulation similarly to the tamagochi. The Game is a turtle simulation with the goal of feeding the turtle to keep its energy high. Food can be placed by clicking into the game area, but watch out! clicking the turtle will reduce the energy and make the turtle faster.
+In this project, I extended the Snake game, to create a pet simulation similarly to the tamagochi. The Game is a turtle simulation with the goal of feeding the turtle to keep its energy high. The Turtle is moving randomly over the field. Food can be placed by clicking into the game area, but watch out! clicking the turtle will reduce the energy and make the turtle faster.
 In main.cpp three different difficulty levels can be given to the game.
 
 ## Structure
